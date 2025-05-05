@@ -1,9 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useSetRecoilState } from "recoil";
 import { styled } from "styled-components";
-import { toMovieId, toShouldFetch } from "../atoms";
 import { IGetMovieResult } from "../api";
 import { makeImagePath } from "../utils";
+import Popup from "./Popup";
+import { useState } from "react";
 
 const Lists = styled(motion.ul)`
     width: 800px;
@@ -55,33 +55,49 @@ const BoxVariants = {
         opacity: 1,
     },
 };
-function Movies({...data}:IGetMovieResult) {
-	const setMovieID = useSetRecoilState(toMovieId);
-	const setShouldFetch = useSetRecoilState(toShouldFetch);
-	
-	const listOnClick = (movieId: number) => {
+function Movies({ ...data }: IGetMovieResult) {
+    const [movieID, setMovieID] = useState<number | null>(null);
+    const [popOpen, setPopOpen] = useState(false);
+
+    const onOpenModal = (movieId: number) => {
         setMovieID(movieId);
-        setShouldFetch(true);
+        setPopOpen(true);
     };
+    const onCloseModal = () => {
+        setMovieID(null);
+        setPopOpen(false);
+    };
+
     return (
-        <Lists variants={WrapVatiants} initial="start" animate="end">
+        <>
+            <Lists variants={WrapVatiants} initial="start" animate="end">
+                <AnimatePresence>
+                    {data?.results.map((movie) => (
+                        <List
+                            key={movie.id}
+                            layoutId={String(movie.id)}
+                            variants={BoxVariants}
+                            onClick={() => onOpenModal(movie.id)}
+                        >
+                            <Box
+                                $bgPhoto={makeImagePath(
+                                    movie.poster_path,
+                                    "w342"
+                                )}
+                                whileHover={{ y: -30 }}
+                            ></Box>
+                            <Title>{movie.title}</Title>
+                        </List>
+                    ))}
+                </AnimatePresence>
+            </Lists>
+
             <AnimatePresence>
-                {data?.results.map((movie) => (
-                    <List
-                        key={movie.id}
-                        layoutId={String(movie.id)}
-                        variants={BoxVariants}
-                        onClick={() => listOnClick(movie.id)}
-                    >
-                        <Box
-                            $bgPhoto={makeImagePath(movie.poster_path, "w342")}
-                            whileHover={{ y: -30 }}
-                        ></Box>
-                        <Title>{movie.title}</Title>
-                    </List>
-                ))}
+                {popOpen && movieID !== null ? (
+                    <Popup id={movieID} onCloseModal={onCloseModal} />
+                ) : null}
             </AnimatePresence>
-        </Lists>
+        </>
     );
 }
 

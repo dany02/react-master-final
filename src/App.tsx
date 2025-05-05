@@ -1,8 +1,10 @@
 import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Header from './components/Header';
-import Home from './Routes/Home';
 import { styled } from 'styled-components';
+import Popular from './Routes/Popular';
+import ComingSoon from './Routes/CommingSoon';
+import NowPlaying from './Routes/NowPlaying';
 
 const Wrapper = styled.div`
 	display:flex;
@@ -17,9 +19,9 @@ function App() {
 		<Router>
 			<Header/>
 			<Routes>
-				<Route path='/' element={<Home/>}></Route>
-				<Route path='/comming-soon' element={<Home/>}></Route>
-				<Route path='/now-playing' element={<Home/>}></Route>
+				<Route path='/' element={<Popular/>}></Route>
+				<Route path='/comming-soon' element={<ComingSoon/>}></Route>
+				<Route path='/now-playing' element={<NowPlaying/>}></Route>
 			</Routes>
 		</Router>
 	</Wrapper>

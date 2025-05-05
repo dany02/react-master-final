@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
 import { styled } from "styled-components";
-import { IGetDetailMovie } from "../api";
+import { getDetailMovie, IGetDetailMovie } from "../api";
 import { makeImagePath } from "../utils";
-import {useSetRecoilState } from "recoil";
-import { toMovieId, toShouldFetch } from "../atoms";
+import { useQuery } from "@tanstack/react-query";
 
 const Overlay = styled(motion.div)`
     position: fixed;
@@ -45,7 +44,7 @@ const CoverImg = styled.div`
     height: 50%;
     padding: 20px;
     background-size: cover;
-    background-position: center;
+    background-position: top;
 `;
 
 const Contents = styled.div`
@@ -75,19 +74,21 @@ const Options = styled.ul`
     }
 `;
 
-function Popup({...res}:IGetDetailMovie) {
-    const setMovie = useSetRecoilState(toMovieId);
-	const setFetch = useSetRecoilState(toShouldFetch);
+interface PopupProps {
+	onCloseModal: () => void;
+	id: number;
+}
 
-	const modalClick = () => {
-        setFetch(false);
-        setMovie(undefined);
-    };
-	
+function Popup({onCloseModal, id}:PopupProps) {	
+	const res = useQuery<IGetDetailMovie>({
+		queryKey: ["modal"],
+		queryFn: () => getDetailMovie(id),
+		enabled: !!id
+	});
 	return (
         <>
             <Overlay animate={{ opacity: 1 }} />
-            <Modal layoutId={String(res.id)} key={res.id} transition={{delay: 0.3}}>
+            <Modal layoutId={String(id)} key={id} transition={{delay: 0.5}}>
                 <Inner>
                     <Svg
                         data-slot="icon"
@@ -95,7 +96,7 @@ function Popup({...res}:IGetDetailMovie) {
                         viewBox="0 0 20 20"
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true"
-                        onClick={modalClick}
+                        onClick={onCloseModal}
                     >
                         <path
                             clipRule="evenodd"
@@ -105,30 +106,29 @@ function Popup({...res}:IGetDetailMovie) {
                     </Svg>
                     <CoverImg
                         style={{
-                            backgroundImage: `linear-gradient(to top, black, transparent), url(${makeImagePath(
-                                res.backdrop_path,
-                                "w780"
-                            )})`,
-                        }}
+							backgroundImage: res?.data?.backdrop_path
+							  ? `linear-gradient(to top, black, transparent), url(${makeImagePath(res.data.backdrop_path, "w780")})`
+							  : undefined, 
+						  }}
                     />
                     <Contents>
-                        <ModalTitle>{res.title}</ModalTitle>
-                        <Overview>{res.overview}</Overview>
+                        <ModalTitle>{res.data?.title}</ModalTitle>
+                        <Overview>{res.data?.overview}</Overview>
                         <Options>
                             <li>
-                                Budget : <span>{res.budget}</span>
+                                Budget : <span>{res.data?.budget}</span>
                             </li>
                             <li>
-                                Revenue : <span>{res.revenue}</span>
+                                Revenue : <span>{res.data?.revenue}</span>
                             </li>
                             <li>
-                                Runtime : <span>{res.runtime}</span>
+                                Runtime : <span>{res.data?.runtime}</span>
                             </li>
                             <li>
-                                Rating : <span>{res.vote_average}</span>
+                                Rating : <span>{res.data?.vote_average}</span>
                             </li>
                             <li>
-                                Homepage : <span>{res.homepage}</span>
+                                Homepage : <span>{res.data?.homepage}</span>
                             </li>
                         </Options>
                     </Contents>
